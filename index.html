@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulaw: Intelligent Corporate Services</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; color: #1a202c; }
+        .formulaw-gradient-text { background: linear-gradient(to right, #4f46e5, #2563eb); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-link { transition: color 0.3s, border-bottom-color 0.3s; border-bottom: 2px solid transparent; }
+        .nav-link:hover, .nav-link.active { color: #3b82f6; border-bottom-color: #3b82f6; }
+        .stat-card { background-color: white; border-radius: 0.75rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s; height: 100%; }
+        .stat-card-interactive { cursor: pointer; }
+        .stat-card-interactive:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1); }
+        .control-button { transition: all 0.2s; border: 1px solid #d1d5db; }
+        .control-button.active { background-color: #3b82f6; color: white; border-color: #3b82f6; }
+        .chart-container { position: relative; width: 100%; margin: auto; height: 400px; }
+        .modal { transition: opacity 0.3s ease; }
+        .modal-content { transition: transform 0.3s ease; }
+        .accordion-content { overflow: hidden; transition: max-height 0.5s ease-out, padding 0.5s ease-out; }
+        .accordion-title svg { transition: transform 0.3s ease; }
+        .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        .pain-point-selector { display: none; }
+        .pain-point-label { transition: all 0.2s ease-in-out; }
+        .pain-point-content { display: none; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        #pain-timesink:checked ~ .pain-point-grid .pain-content-timesink,
+        #pain-blackhole:checked ~ .pain-point-grid .pain-content-blackhole,
+        #pain-blankcheque:checked ~ .pain-point-grid .pain-content-blankcheque,
+        #pain-valuegap:checked ~ .pain-point-grid .pain-content-valuegap { display: flex; }
+        #pain-timesink:checked ~ .pain-point-labels label[for="pain-timesink"],
+        #pain-blackhole:checked ~ .pain-point-labels label[for="pain-blackhole"],
+        #pain-blankcheque:checked ~ .pain-point-labels label[for="pain-blankcheque"],
+        #pain-valuegap:checked ~ .pain-point-labels label[for="pain-valuegap"] { background-color: #dc2626; color: white; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(220, 38, 38, 0.3); }
+        .interactive-indicator { position: absolute; top: 0.75rem; right: 0.75rem; color: #9ca3af; transition: all 0.3s ease; }
+        .stat-card-interactive:hover .interactive-indicator { color: #3b82f6; transform: scale(1.1); }
+        .stat-card-interactive:hover { border-color: #3b82f6 !important; }
+
+        /* Styles for Business Model Section */
+        .strategy-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .strategy-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+            border-color: #6366f1;
+        }
+        .strategy-card .role-pill {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        /* Styles for new tabs */
+        .tab-button {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .tab-button.active {
+            border-bottom-color: #4f46e5;
+            color: #4f46e5;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header id="header" class="bg-white/90 backdrop-blur-lg shadow-sm sticky top-0 z-40">
+        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+        <a href="#hero" class="flex items-center">
+            <span class="text-2xl font-bold formulaw-gradient-text">Formulaw</span>
+        </a>
+            <div class="hidden md:flex space-x-8">
+                <a href="#opportunity" class="nav-link text-gray-600 font-medium pb-1">Opportunity</a>
+                <a href="#solution" class="nav-link text-gray-600 font-medium pb-1">Solution</a>
+                <a href="#strategy" class="nav-link text-gray-600 font-medium pb-1">Strategy</a>
+                <a href="#execution" class="nav-link text-gray-600 font-medium pb-1">Execution</a>
+                <a href="#financials" class="nav-link text-gray-600 font-medium pb-1">Financials</a>
+                <a href="#contact" class="nav-link text-gray-600 font-medium pb-1">Contact</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden focus:outline-none"><svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg></button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-200">
+            <a href="#opportunity" class="nav-link-mobile block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">Opportunity</a>
+            <a href="#solution" class="nav-link-mobile block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">Solution</a>
+            <a href="#strategy" class="nav-link-mobile block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">Strategy</a>
+            <a href="#execution" class="nav-link-mobile block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">Execution</a>
+            <a href="#financials" class="nav-link-mobile block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">Financials</a>
+            <a href="#contact" class="nav-link-mobile block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100">Contact</a>
+        </div>
+    </header>
+
+    <main>
+        <section id="hero" class="py-20 bg-white">
+            <div class="container mx-auto px-6 text-center">
+                <img src="assets/flawlogo.png" alt="Formulaw Logo" class="h-20 md:h-15 mx-auto">
+                <p class="text-xl md:text-2xl text-gray-600 max-w-1xl mx-auto mt-2 mb-10">The Law Firm of The Future</p>
+                <div class="bg-indigo-50 border-l-4 border-indigo-500 text-indigo-800 p-6 rounded-lg max-w-2xl mx-auto text-left shadow-lg">
+                    <h2 class="text-2xl font-bold mb-2">The Ask: €300,000</h2>
+                    <p class="text-base">To revolutionize corporate legal work with an agentic platform, launching in the UAE & Cyprus.</p>
+                </div>
+            </div>
+        </section>
+
+        <hr/>
+        
+        <section id="opportunity" class="py-16 md:py-24">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12 reveal">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-800">The Founder's Dilemma</h2>
+                    <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">Starting a company should be exciting. Instead, founders are trapped by corporate service providers who waste their two most valuable resources: <span class="font-bold text-red-600">time and money.</span></p>
+                </div>
+                <div class="max-w-4xl mx-auto reveal">
+                    <input type="radio" name="csp-pain" id="pain-timesink" class="pain-point-selector" checked/>
+                    <input type="radio" name="csp-pain" id="pain-blackhole" class="pain-point-selector"/>
+                    <input type="radio" name="csp-pain" id="pain-blankcheque" class="pain-point-selector"/>
+                    <input type="radio" name="csp-pain" id="pain-valuegap" class="pain-point-selector"/>
+                    <div class="flex flex-wrap justify-center gap-3 md:gap-4 mb-8 pain-point-labels">
+                        <label for="pain-timesink" class="pain-point-label cursor-pointer font-semibold py-2 px-5 bg-white border border-gray-300 rounded-full shadow-sm hover:bg-red-500 hover:text-white hover:border-red-500">The Time Sink</label>
+                        <label for="pain-blackhole" class="pain-point-label cursor-pointer font-semibold py-2 px-5 bg-white border border-gray-300 rounded-full shadow-sm hover:bg-red-500 hover:text-white hover:border-red-500">The Black Hole</label>
+                        <label for="pain-blankcheque" class="pain-point-label cursor-pointer font-semibold py-2 px-5 bg-white border border-gray-300 rounded-full shadow-sm hover:bg-red-500 hover:text-white hover:border-red-500">The Blank Cheque</label>
+                        <label for="pain-valuegap" class="pain-point-label cursor-pointer font-semibold py-2 px-5 bg-white border border-gray-300 rounded-full shadow-sm hover:bg-red-500 hover:text-white hover:border-red-500">The Value Gap</label>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-xl p-8 min-h-[220px] flex items-center pain-point-grid">
+                        <div class="pain-point-content pain-content-timesink items-center gap-6">
+                            <div class="flex-shrink-0 text-red-500 hidden sm:block"><svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
+                            <div><h3 class="font-bold text-2xl text-red-600 mb-2">The Time Sink of Manual Processes</h3><p class="text-gray-700 text-lg">Your launch is stalled waiting for paperwork. A long weekend means nothing happens. You're losing weeks to processes that should take minutes. <strong>Your momentum is sacrificed for their bureaucracy.</strong></p></div>
+                        </div>
+                        <div class="pain-point-content pain-content-blackhole items-center gap-6">
+                            <div class="flex-shrink-0 text-red-500 hidden sm:block"><svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6a3 3 0 11-6 0 3 3 0 016 0zm0 12a3 3 0 11-6 0 3 3 0 016 0zm0-6a3 3 0 11-6 0 3 3 0 016 0z" /></svg></div>
+                            <div><h3 class="font-bold text-2xl text-red-600 mb-2">The Communication Black Hole</h3><p class="text-gray-700 text-lg">You sent an "urgent" email 12 hours ago... crickets. You have no visibility on progress and no one to call. <strong>You're left completely in the dark, unable to plan your next move.</strong></p></div>
+                        </div>
+                        <div class="pain-point-content pain-content-blankcheque items-center gap-6">
+                            <div class="flex-shrink-0 text-red-500 hidden sm:block"><svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" /></svg></div>
+                            <div><h3 class="font-bold text-2xl text-red-600 mb-2">The Blank Cheque of Billable Hours</h3><p class="text-gray-700 text-lg">You need to ask a simple question, but you hesitate, fearing the €300 invoice for a 10-minute phone call. <strong>The unpredictable cost model stifles communication and forces you to make uninformed decisions.</strong></p></div>
+                        </div>
+                        <div class="pain-point-content pain-content-valuegap items-center gap-6">
+                            <div class="flex-shrink-0 text-red-500 hidden sm:block"><svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
+                            <div><h3 class="font-bold text-2xl text-red-600 mb-2">The Value Gap</h3><p class="text-gray-700 text-lg">Your latest bill shows 5 hours of "admin work" to complete a standard form. You're not paying for expert advice; <strong>you're paying a premium for your provider's own inefficiency.</strong></p></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-16 bg-white p-6 md:p-8 rounded-lg shadow-xl reveal">
+                    <h3 class="text-2xl font-bold text-center mb-2 text-gray-800">An Opportunity Born from Frustration</h3>
+                    <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">This broken service model is a massive opportunity in high-growth hubs like the UAE and Cyprus, where thousands of new founders demand a smarter way to operate.</p>
+                    <div class="grid md:grid-cols-2 gap-8 items-center">
+                        <div class="relative text-center stat-card-interactive stat-card border-2 border-gray-200" data-modal-target="uae-modal">
+                            <div class="interactive-indicator"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg></div>
+                            <h4 class="text-2xl font-bold text-blue-600 mb-2">United Arab Emirates (UAE)</h4><p class="text-4xl font-bold text-gray-800">200,000+</p><p class="mt-2 text-gray-600 font-medium">New Business Licenses in 2024</p><p class="text-2xl font-bold text-gray-800 mt-4">90%</p><p class="mt-1 text-gray-600 font-medium">Of founders cite service speed as a key factor</p>
+                        </div>
+                        <div class="relative text-center stat-card-interactive stat-card border-2 border-gray-200" data-modal-target="cyprus-modal">
+                            <div class="interactive-indicator"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg></div>
+                            <h4 class="text-2xl font-bold text-indigo-600 mb-2">Cyprus: The EU Gateway</h4><p class="text-4xl font-bold text-gray-800">16.3%</p><p class="mt-2 text-gray-600 font-medium">Growth in New Company Registrations (YTD)</p><p class="text-2xl font-bold text-gray-800 mt-4">Top 5</p><p class="mt-1 text-gray-600 font-medium">Destination for tech company relocations</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr/>
+
+        <section id="solution" class="py-16 md:py-24 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12 reveal">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-800">The Agentic Difference: How We Deliver</h2>
+                    <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">We replace reactive tasks with proactive, intelligent agents that manage your corporate affairs seamlessly, giving you back time and providing peace of mind.</p>
+                </div>
+                
+                <div class="grid lg:grid-cols-2 gap-12 items-center">
+                    <div class="text-center reveal">
+                        <img src="assets/formulaw_orb.gif" alt="Animation of the Formulaw sphere logo" class="rounded-lg shadow-2xl mx-auto">
+                    </div>
+
+                    <div class="space-y-8 reveal" style="transition-delay: 200ms;">
+                        
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0 w-12 h-12 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800 mb-2">Instant Execution & Triage</h3>
+                                <p class="text-gray-600">Initiate any service, 24/7. Our agents instantly onboard you, draft the necessary documents, and intelligently triage the request—preparing a concise, actionable plan for our legal team in minutes.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0 w-12 h-12 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286zm0 13.036h.008v.008H12v-.008z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800 mb-2">Proactive Governance</h3>
+                                <p class="text-gray-600">Your company's administration on autopilot. Agents act as a virtual secretary to minute meetings, manage KYC workflows, and proactively monitor compliance deadlines so you're always ahead.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0 w-12 h-12 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800 mb-2">Institutional Memory</h3>
+                                <p class="text-gray-600">Your entire corporate history, instantly searchable. Our platform creates a secure, intelligent knowledge base of your documents and decisions, turning hours of searching into a seconds-long query.</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr/>
+        
+        <section id="strategy" class="py-16 md:py-24">
+            <div class="container mx-auto px-6">
+            <div class="text-center mb-16 reveal">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-800">A Multi-Layered, High-Margin Business Model</h2>
+                    <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">Our strategy is simple: acquire clients with superior transactional services, retain them with high-value subscriptions, and scale limitlessly through our B2B platform.</p>
+                </div>
+                
+                <div class="flex flex-wrap justify-center gap-8 mb-16 text-center">
+                    
+                    <div class="strategy-card reveal w-full md:w-1/3">
+                        <span class="role-pill bg-blue-100 text-blue-800">ACQUIRE</span>
+                        <h3 class="text-2xl font-bold text-gray-800">Transactional Engine</h3>
+                        <p class="text-gray-500 mb-4">(Pay-Per-Action)</p>
+                        <p class="text-gray-700 flex-grow">One-off services like company formation, share transfers, and visa processing serve as our primary customer acquisition channel.</p>
+                        <div class="mt-6 border-t pt-4">
+                            <p class="text-sm text-gray-500 font-semibold">KEY METRIC</p>
+                            <p class="text-2xl font-bold text-blue-600">€50 - €300 per action</p>
+                        </div>
+                    </div>
+
+                    <div class="strategy-card reveal w-full md:w-1/3" style="transition-delay: 200ms;">
+                        <span class="role-pill bg-indigo-100 text-indigo-800">RETAIN</span>
+                        <h3 class="text-2xl font-bold text-gray-800">Subscription Core</h3>
+                        <p class="text-gray-500 mb-4">(Recurring Revenue)</p>
+                        <p class="text-gray-700 flex-grow">Annual packages for compliance, registered contract assistant agents, and AI directorship services, high-LTV revenue stream.</p>
+                        <div class="mt-6 border-t pt-4">
+                            <p class="text-sm text-gray-500 font-semibold">KEY METRIC</p>
+                            <p class="text-2xl font-bold text-indigo-600">€85 - €150 per month</p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="mt-16 bg-white p-6 md:p-8 rounded-lg shadow-xl reveal">
+                    <h3 class="text-2xl font-bold text-center mb-2 text-gray-800">Visualizing Our Competitive Advantage</h3>
+                    <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">We outperform abstract market archetypes and specific key players across the dimensions that matter most to modern founders.</p>
+                    
+                    <div class="border-b border-gray-200 mb-6">
+                        <nav class="-mb-px flex justify-center space-x-6 md:space-x-8" aria-label="Tabs">
+                            <button id="archetype-tab" class="tab-button whitespace-nowrap py-4 px-1 text-base font-medium text-gray-500 hover:text-indigo-600 active">
+                                Vs. Market Archetypes
+                            </button>
+                            <button id="competitor-tab" class="tab-button whitespace-nowrap py-4 px-1 text-base font-medium text-gray-500 hover:text-indigo-600">
+                                Vs. Key Competitors
+                            </button>
+                        </nav>
+                    </div>
+
+                    <div>
+                        <div id="archetype-content">
+                            <div class="chart-container" style="height: 450px;">
+                                <canvas id="competitorRadarChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div id="competitor-content" class="hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm text-left text-gray-700">
+                                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3">Competitor</th>
+                                            <th scope="col" class="px-6 py-3">Type / Region</th>
+                                            <th scope="col" class="px-6 py-3">Key Strength</th>
+                                            <th scope="col" class="px-6 py-3 text-white bg-indigo-600">Formulaw's Advantage</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="bg-white border-b hover:bg-gray-50">
+                                            <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">Al Tamimi & Co.</td>
+                                            <td class="px-6 py-4"><span class="bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">Law Firm / UAE</span></td>
+                                            <td class="px-6 py-4">Unmatched legal depth for complex, high-stakes M&A and litigation.</td>
+                                            <td class="px-6 py-4 font-medium text-gray-800">Prohibitively expensive and slow for startup needs. We offer 95% of what a startup requires at 10% of the cost, with radical price transparency.</td>
+                                        </tr>
+                                        <tr class="bg-white border-b hover:bg-gray-50">
+                                            <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">Virtuzone</td>
+                                            <td class="px-6 py-4"><span class="bg-yellow-100 text-yellow-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">CSP / UAE</span></td>
+                                            <td class="px-6 py-4">High-volume, low-cost company setup. Fast for standard packages.</td>
+                                            <td class="px-6 py-4 font-medium text-gray-800">They are a setup "factory." We are a long-term growth partner, equipped to handle scaling needs like funding rounds and ESOPs which they cannot.</td>
+                                        </tr>
+                                        <tr class="bg-white border-b hover:bg-gray-50">
+                                            <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">PwC Corporate Services</td>
+                                            <td class="px-6 py-4"><span class="bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">Big 4 CSP / Cyprus</span></td>
+                                            <td class="px-6 py-4">"Blue-chip" brand trust and integrated audit/tax/legal services.</td>
+                                            <td class="px-6 py-4 font-medium text-gray-800">Legacy processes, billable hour model, and not tech-driven. We provide a superior, tech-native client experience with the transparency they lack.</td>
+                                        </tr>
+                                        <tr class="bg-white border-b hover:bg-gray-50">
+                                            <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">Chrysses Demetriades & Co.</td>
+                                            <td class="px-6 py-4"><span class="bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">Law Firm / Cyprus</span></td>
+                                            <td class="px-6 py-4">Deep-rooted Cypriot legal expertise and high-level network.</td>
+                                            <td class="px-6 py-4 font-medium text-gray-800">Built for large corporations, not agile startups. Our platform offers superior efficiency and accessibility for day-to-day corporate management.</td>
+                                        </tr>
+                                        <tr class="bg-white hover:bg-gray-50">
+                                            <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">Shuraa Business Setup</td>
+                                            <td class="px-6 py-4"><span class="bg-yellow-100 text-yellow-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">CSP / UAE</span></td>
+                                            <td class="px-6 py-4">Aggressive pricing and marketing for very basic free zone setups.</td>
+                                            <td class="px-6 py-4 font-medium text-gray-800">The "value gap" is significant; their service ceiling is extremely low. We provide a clear path from formation to complex legal needs, ensuring clients never outgrow our platform.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <hr/>
+
+        <section id="execution" class="py-16 md:py-24 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12 reveal"><h2 class="text-3xl md:text-4xl font-bold text-gray-800">Team & Use of Funds</h2><p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">This investment fuels our launch and provides an 12-month runway to execute our strategy with the right team and resources.</p></div>
+                <div class="grid lg:grid-cols-2 gap-12 items-center">
+                    <div class="bg-gray-50 p-8 rounded-lg shadow-lg reveal"><h3 class="text-2xl font-bold text-center mb-6 text-gray-800">Allocation of €300,000 Seed Capital</h3><div class="chart-container" style="height: 320px;"><canvas id="useOfFundsChart"></canvas></div></div>
+                    <div class="reveal" style="transition-delay: 200ms;"><h3 class="text-2xl font-bold text-center mb-6 text-gray-800">The Right Team to Execute</h3><div class="grid sm:grid-cols-3 gap-6 text-center">
+                        <div class="relative stat-card-interactive p-4 border-2 border-gray-200" data-modal-target="ceo-modal">
+                            <div class="interactive-indicator"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg></div>
+                            <img src="assets/ramzi.jpeg" alt="CEO Headshot" class="w-32 h-32 rounded-full mx-auto shadow-lg mb-4">
+                            <h4 class="font-bold text-lg">Ramzi Edward Khoury</h4><p class="text-sm text-gray-600">Accomplished technologist with a successful exit and deep consulting experience in the Middle East..</p></div>
+                        <div class="relative stat-card-interactive p-4 border-2 border-gray-200" data-modal-target="cto-modal">
+                            <div class="interactive-indicator"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg></div>
+                             <img src="assets/ziad.jpeg" alt="CTO Headshot" class="w-32 h-32 rounded-full mx-auto shadow-lg mb-4">
+                            <h4 class="font-bold text-lg">Ziad Joseph</h4><p class="text-sm text-gray-600">Expert in AI/ML with experience building secure, enterprise-grade cloud platforms.</p></div>
+                        <div class="relative stat-card-interactive p-4 border-2 border-gray-200" data-modal-target="coo-modal">
+                            <div class="interactive-indicator"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg></div>
+                             <img src="assets/vio.jpeg" alt="COO Headshot" class="w-32 h-32 rounded-full mx-auto shadow-lg mb-4">
+                            <h4 class="font-bold text-lg">Violetta Skittidi </h4><p class="text-sm text-gray-600">Cyprus qualified lawyer with deep expertise in Cyprus corporate structuring.</p></div>
+                    </div></div>
+                </div>
+            </div>
+        </section>
+        <hr/>
+        <section id="financials" class="py-16 md:py-24">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12 reveal"><h2 class="text-3xl md:text-4xl font-bold text-gray-800">Financial Projections & Traction</h2><p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">Our model is designed for rapid, capital-efficient growth. We have already achieved <span class="font-bold text-indigo-600">€75,000 in Annual Recurring Revenue (ARR)</span>, validating early product-market fit. The following chart illustrates our projected growth, fueled by this investment.</p></div>
+                <div class="bg-white p-6 md:p-8 rounded-lg shadow-xl reveal">
+                    <div class="flex justify-center mb-4 space-x-2"><button id="show-all-btn" class="control-button py-2 px-4 text-sm font-semibold rounded-md active">All</button><button id="forecast-btn" class="control-button py-2 px-4 text-sm font-semibold rounded-md">Forecast</button><button id="actuals-btn" class="control-button py-2 px-4 text-sm font-semibold rounded-md">Actuals</button></div>
+                    <div class="chart-container"><canvas id="financialsChart"></canvas></div>
+                    <div class="text-center mt-6 text-sm text-gray-600 max-w-2xl mx-auto">
+                        <p><strong class="text-gray-800">Key Assumptions:</strong> Target 6-month Customer Acquisition Cost (CAC) Payback Period | Projected Lifetime Value (LTV) to CAC Ratio of 8:1 | Gross Margin > 80% at scale.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <hr/>
+        <section id="contact" class="py-20">
+             <div class="container mx-auto px-6 text-center reveal">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800">Let's Build the Future of Legal Together.</h2><p class="mt-6 text-lg text-gray-600">Get in touch to discuss this investment opportunity.</p>
+                <div class="mt-8"><p class="text-xl font-semibold text-gray-800">Violetta Skittidi, COO</p><a href="mailto:violetta@formulaw.com" class="text-lg text-blue-600 hover:underline">violetta@formulaw.com</a><p class="text-lg text-gray-700 mt-1">+357 99 747767</p></div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-6 text-center"><p>&copy; 2025 Formulaw. All rights reserved.</p><p class="text-sm text-gray-400 mt-2">This document is for informational purposes only and does not constitute an offer to sell or a solicitation of an offer to buy any securities.</p></div>
+    </footer>
+
+    <div id="modal-container" class="hidden">
+        <div id="uae-modal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 opacity-0 pointer-events-none">
+            <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-lg p-6 transform scale-95"><h3 class="text-2xl font-bold text-blue-600 mb-4">Deep Dive: UAE Market</h3><ul class="space-y-3 text-gray-700"><li><strong class="font-semibold text-gray-900">Market Drivers:</strong> The €3.24B legal services market is propelled by a pro-business government stance, significant FDI inflows (Source: Dubai FDI Monitor), and its status as a global hub for trade and finance.</li><li><strong class="font-semibold text-gray-900">License Growth:</strong> Over 200,000 new business licenses were issued in 2024, driven by key free zones like DMCC, DIFC, and ADGM which attract international companies seeking 100% foreign ownership.</li><li><strong class="font-semibold text-gray-900">Digital Imperative:</strong> A highly connected, tech-savvy population of entrepreneurs and managers creates immense demand for digital-first service delivery, which is currently unmet.</li><li><strong class="font-semibold text-gray-900">Ideal Client:</strong> International tech firms, VCs, and expanding SMEs seeking a modern, compliant base of operations.</li></ul><button class="modal-close mt-6 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">Close</button></div>
+        </div>
+        <div id="cyprus-modal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 opacity-0 pointer-events-none">
+            <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-lg p-6 transform scale-95"><h3 class="text-2xl font-bold text-indigo-600 mb-4">Deep Dive: Cyprus Market</h3><ul class="space-y-3 text-gray-700"><li><strong class="font-semibold text-gray-900">EU Gateway:</strong> As an EU member state, Cyprus offers a stable regulatory framework and seamless access to the European single market, making it a strategic entry point for non-EU businesses.</li><li><strong class="font-semibold text-gray-900">Tech Sector Boom:</strong> The €4B contribution from the tech sector is fueled by growth in FinTech and software development, supported by attractive IP Box tax regimes (Source: Invest Cyprus).</li><li><strong class="font-semibold text-gray-900">Modernizing Stance:</strong> The government's focus on digital transformation and reducing bureaucracy makes it ideal for tech-savvy businesses—our exact target client.</li><li><strong class="font-semibold text-gray-900">Ideal Client:</strong> Non-EU businesses seeking a stable EU gateway, particularly in FinTech and software development.</li></ul><button class="modal-close mt-6 bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700">Close</button></div>
+        </div>
+        <div id="ceo-modal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 opacity-0 pointer-events-none">
+            <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-lg p-6 transform scale-95">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">Profile: Co-Founder / CEO</h3>
+                <p class="text-gray-600 mb-4">An accomplished technologist and seasoned commercial leader with a successful tech exit in the United Arab Emirates. His background combines hands-on venture building with strategic consulting across the Middle East, underpinned by legal qualifications from the University of Queen Mary. He specializes in scaling B2B tech companies from early stages to significant growth.</p>
+                <ul class="space-y-3 text-gray-700">
+                    <li><strong class="font-semibold text-gray-900">Key Achievement:</strong> Scaled a previous B2B SaaS venture to $1.4 million ARR.</li>
+                    <li><strong class="font-semibold text-gray-900">Expertise:</strong> Go-to-market strategy, product-led growth, and international expansion.</li>
+                </ul>
+                <button class="modal-close mt-6 bg-gray-800 text-white py-2 px-4 rounded hover:bg-gray-900">Close</button>
+            </div>
+        </div>
+        <div id="cto-modal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 opacity-0 pointer-events-none">
+            <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-lg p-6 transform scale-95">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">Profile: Chief Technology Officer</h3>
+                <p class="text-gray-600 mb-4">A veteran technology leader with decades of experience specializing in Artificial Intelligence (AI) and Machine Learning (ML). Ziad has a proven track record of architecting secure, enterprise-grade cloud platforms for S&P 500 companies during his tenure at global firms like EPAM. He is an expert in building scalable, robust technology solutions designed for high-stakes enterprise environments.</p>
+                <ul class="space-y-3 text-gray-700">
+                    <li><strong class="font-semibold text-gray-900">Key Achievement:</strong> Successfully architected and delivered enterprise-grade, scalable applications for multiple S&P 500 clients.</li>
+                    <li><strong class="font-semibold text-gray-900">Expertise:</strong> AI/ML development, enterprise software architecture, secure cloud platforms, and system scalability.</li>
+                </ul>
+                <button class="modal-close mt-6 bg-gray-800 text-white py-2 px-4 rounded hover:bg-gray-900">Close</button>
+            </div>
+        </div>
+        <div id="coo-modal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 opacity-0 pointer-events-none">
+            <div class="modal-content bg-white rounded-lg shadow-xl w-full max-w-lg p-6 transform scale-95">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">Profile: Co-Founder / COO</h3>
+                <p class="text-gray-600 mb-4">A Cyprus-qualified lawyer specializing in corporate and commercial law. As an economics and law graduate, Violetta brings a unique blend of legal acumen and business strategy. Her expertise in corporate structuring is complemented by a passion for innovation, demonstrated by winning university-level startup competitions. She ensures the company’s legal framework is optimized for growth and compliance.</p>
+                <ul class="space-y-3 text-gray-700">
+                    <li><strong class="font-semibold text-gray-900">Key Achievement:</strong> Won multiple university startup competitions, demonstrating strong business planning and pitching acumen.</li>
+                    <li><strong class="font-semibold text-gray-900">Practice Areas:</strong> Cyprus corporate structuring, international commercial law, regulatory compliance, and startup governance.</li>
+                </ul>
+                <button class="modal-close mt-6 bg-gray-800 text-white py-2 px-4 rounded hover:bg-gray-900">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // --- Core Application Logic ---
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenuButton.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+        document.querySelectorAll('.nav-link-mobile').forEach(link => { link.addEventListener('click', () => mobileMenu.classList.add('hidden')); });
+        document.querySelectorAll('.accordion-title').forEach(title => { title.addEventListener('click', () => { const content = title.nextElementSibling; const svg = title.querySelector('svg'); if (content.style.maxHeight) { content.style.maxHeight = null; content.style.paddingTop = '0'; svg.style.transform = 'rotate(0deg)'; } else { content.style.maxHeight = content.scrollHeight + 'px'; content.style.paddingTop = '0.5rem'; svg.style.transform = 'rotate(180deg)'; } }); });
+        const modalContainer = document.getElementById('modal-container');
+        document.querySelectorAll('[data-modal-target]').forEach(trigger => { trigger.addEventListener('click', () => { const modalId = trigger.getAttribute('data-modal-target'); const modal = document.getElementById(modalId); if (modal) { modalContainer.classList.remove('hidden'); modal.classList.remove('opacity-0', 'pointer-events-none'); modal.querySelector('.modal-content').classList.remove('scale-95'); } }); });
+        document.querySelectorAll('.modal-close').forEach(closeBtn => { closeBtn.addEventListener('click', () => { const modal = closeBtn.closest('.modal'); const modalContent = modal.querySelector('.modal-content'); modal.classList.add('opacity-0'); modalContent.classList.add('scale-95'); setTimeout(() => { modal.classList.add('pointer-events-none'); modalContainer.classList.add('hidden'); }, 300); }); });
+        const revealObserver = new IntersectionObserver((entries) => { entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('visible'); revealObserver.unobserve(entry.target); } }); }, { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+        
+        // --- NEW: Tab switching logic ---
+        const archetypeTab = document.getElementById('archetype-tab');
+        const competitorTab = document.getElementById('competitor-tab');
+        const archetypeContent = document.getElementById('archetype-content');
+        const competitorContent = document.getElementById('competitor-content');
+
+        archetypeTab.addEventListener('click', () => {
+            // Set button state
+            archetypeTab.classList.add('active');
+            competitorTab.classList.remove('active');
+            // Set content visibility
+            archetypeContent.classList.remove('hidden');
+            competitorContent.classList.add('hidden');
+        });
+
+        competitorTab.addEventListener('click', () => {
+            // Set button state
+            competitorTab.classList.add('active');
+            archetypeTab.classList.remove('active');
+            // Set content visibility
+            competitorContent.classList.remove('hidden');
+            archetypeContent.classList.add('hidden');
+        });
+
+        // --- Charts Data & Configuration ---
+        const useOfFundsCtx = document.getElementById('useOfFundsChart')?.getContext('2d');
+        if (useOfFundsCtx) {
+            new Chart(useOfFundsCtx, {
+                type: 'doughnut',
+                data: { 
+                    labels: ['Research & Development (48.5%)', 'Marketing & Get-to-Market (36.6%)', 'Operations (14.9%)'], 
+                    datasets: [{ 
+                        data: [110800, 83580, 33123], 
+                        backgroundColor: ['#3b82f6', '#6366f1', '#8b5cf6'], 
+                        borderColor: '#f8f9fa', 
+                        borderWidth: 4 
+                    }] 
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { padding: 15, font: { size: 12 }}}, tooltip: { callbacks: { label: (c) => `${c.label}: ${new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(c.parsed)}` }}}}
+            });
+        }
+        
+        const competitorCtx = document.getElementById('competitorRadarChart')?.getContext('2d');
+        if (competitorCtx) {
+            new Chart(competitorCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['Legal Expertise', 'Government Integration', 'Pricing Transparency', 'Client Experience', 'Scalability for Growth'],
+                    datasets: [{
+                        label: 'Formulaw',
+                        data: [7, 9, 10, 9, 8],
+                        fill: true, backgroundColor: 'rgba(79, 70, 229, 0.2)', borderColor: 'rgb(79, 70, 229)', pointBackgroundColor: 'rgb(79, 70, 229)',
+                        pointBorderColor: '#fff', pointHoverBackgroundColor: '#fff', pointHoverBorderColor: 'rgb(79, 70, 229)'
+                    }, {
+                        label: 'Traditional Law Firms',
+                        data: [9, 4, 2, 5, 7],
+                        fill: true, backgroundColor: 'rgba(55, 65, 81, 0.2)', borderColor: 'rgb(55, 65, 81)', pointBackgroundColor: 'rgb(55, 65, 81)',
+                        pointBorderColor: '#fff', pointHoverBackgroundColor: '#fff', pointHoverBorderColor: 'rgb(55, 65, 81)'
+                    }, {
+                        label: 'Online CSPs',
+                        data: [3, 8, 7, 6, 4],
+                        fill: true, backgroundColor: 'rgba(249, 115, 22, 0.2)', borderColor: 'rgb(249, 115, 22)', pointBackgroundColor: 'rgb(249, 115, 22)',
+                        pointBorderColor: '#fff', pointHoverBackgroundColor: '#fff', pointHoverBorderColor: 'rgb(249, 115, 22)'
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { r: { angleLines: { color: 'rgba(0, 0, 0, 0.05)' }, grid: { color: 'rgba(0, 0, 0, 0.08)' }, pointLabels: { font: { size: 13, weight: '600' }, color: '#374151' }, ticks: { backdropColor: 'transparent', stepSize: 2, beginAtZero: true, max: 10 }}},
+                    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: {size: 14}} }, }
+                }
+            });
+        }
+
+        const financialsCtx = document.getElementById('financialsChart')?.getContext('2d');
+        if (financialsCtx) {
+            const financialsChart = new Chart(financialsCtx, {
+                type: 'line',
+                data: {
+                    labels: ["Q2 '25", "Q3 '25", "Q4 '25", "Q1 '26", "Q2 '26", "Q3 '26", "Q4 '26", "Q1 '27"],
+                    datasets: [
+                        { label: 'Forecast ARR', data: [75000, 120000, 200000, 310000, 450000, 600000, 780000, 1000000], borderColor: 'rgba(59, 130, 246, 0.5)', borderWidth: 2, borderDash: [5, 5], tension: 0.1, fill: false },
+                        { label: 'Actual ARR', data: [20000, 41000, 75000, null, null, null, null, null], borderColor: '#4f46e5', backgroundColor: 'rgba(79, 70, 229, 0.1)', borderWidth: 3, tension: 0.1, fill: true }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { callback: (v) => `€${v / 1000}k` }}},
+                    plugins: { tooltip: { mode: 'index', intersect: false, callbacks: { label: (c) => `${c.dataset.label}: ${new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(c.parsed.y)}` }}}
+                }
+            });
+            const allButtons = [document.getElementById('show-all-btn'), document.getElementById('forecast-btn'), document.getElementById('actuals-btn')];
+            function updateChartVisibility(visible) { allButtons.forEach(b => b.classList.remove('active')); visible.button.classList.add('active'); financialsChart.data.datasets.forEach((d, i) => financialsChart.setDatasetVisibility(i, visible.datasets.includes(d.label))); financialsChart.update(); }
+            allButtons[0].addEventListener('click', () => updateChartVisibility({ button: allButtons[0], datasets: ['Forecast ARR', 'Actual ARR'] }));
+            allButtons[1].addEventListener('click', () => updateChartVisibility({ button: allButtons[1], datasets: ['Forecast ARR'] }));
+            allButtons[2].addEventListener('click', () => updateChartVisibility({ button: allButtons[2], datasets: ['Actual ARR'] }));
+        }
+
+        const navLinks = document.querySelectorAll('header a.nav-link');
+        const sections = document.querySelectorAll('main section');
+        const headerHeight = document.getElementById('header').offsetHeight;
+        window.addEventListener('scroll', () => { let current = ''; sections.forEach(section => { if (pageYOffset >= (section.offsetTop - headerHeight - 40)) { current = section.getAttribute('id'); }}); navLinks.forEach(link => { link.classList.remove('active'); if (link.getAttribute('href').includes(current)) { link.classList.add('active'); }}); });
+    });
+    </script>
+</body>
+</html>
